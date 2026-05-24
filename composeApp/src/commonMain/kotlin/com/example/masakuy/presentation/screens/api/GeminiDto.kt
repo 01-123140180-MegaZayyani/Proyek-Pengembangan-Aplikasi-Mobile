@@ -1,47 +1,32 @@
-package com.example.masakuy.data.remote.dto
+package com.example.masakuy.presentation.screens.api
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@Serializable
-data class GeminiRequest(
-    val contents: List<Map<String, Any>>
-)
+object GeminiDto {
 
-@Serializable
-data class GeminiResponse(
-    val candidates: List<Candidate>? = null
-)
+    @Serializable
+    data class GeminiRequest(
+        val contents: List<Map<String, List<Map<String, String>>>>
+    )
 
-@Serializable
-data class Candidate(
-    val content: Content? = null
-)
+    @Serializable
+    data class GeminiResponse(
+        val candidates: List<Candidate>? = null
+    )
 
-@Serializable
-data class Content(
-    val parts: List<Part>? = null
-)
+    @Serializable
+    data class Candidate(
+        val content: Content? = null
+    )
 
-@Serializable
-data class Part(
-    val text: String? = null
-)
+    @Serializable
+    data class Content(
+        val parts: List<Part>? = null
+    )
 
-@Serializable
-data class RecipeDto(
-    val id: String,
-    val name: String,
-    val image: String,
-    val estimatedCost: Int,
-    val estimatedTime: Int,
-    val difficulty: String,
-    val ingredients: List<IngredientDto>,
-    val instructions: List<String>
-)
-
-@Serializable
-data class IngredientDto(
-    val name: String,
-    val quantity: String,
-    val estimatedPrice: Int
-)
+    @Serializable
+    data class Part(
+        val text: String? = null
+    )
+}

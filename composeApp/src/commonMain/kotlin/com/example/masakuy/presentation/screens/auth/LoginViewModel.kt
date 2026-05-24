@@ -1,4 +1,4 @@
-package com.example.masakuy.presentation.screens.auth
+﻿package com.example.masakuy.presentation.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,20 +20,9 @@ class LoginViewModel : ViewModel() {
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
-            try {
-                _uiState.value = _uiState.value.copy(isLoading = true)
-                // Simulate login
-                kotlinx.coroutines.delay(1000)
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    isSuccess = true
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    error = e.message
-                )
-            }
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            kotlinx.coroutines.delay(600)
+            _uiState.value = _uiState.value.copy(isLoading = false, isSuccess = true)
         }
     }
 }

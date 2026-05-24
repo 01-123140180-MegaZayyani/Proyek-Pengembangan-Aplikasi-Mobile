@@ -1,0 +1,56 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── Validasi cepat sebelum full CI ────────────────────────────────────────
+  quick-check:
+    name: Quick Check (Compile + Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Check Gradle wrapper integrity
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Compile (no test)
+        run: ./gradlew compileDebugKotlin --continue
+
+      - name: Lint check
+        run: ./gradlew lintDebug --continue
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest --continue
+
+      - name: Comment PR with test results
+        if: always()
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: '**/build/test-results/**/*.xml'
+          comment_mode: always
+          check_name: PR Unit Test Results

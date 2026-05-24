@@ -1,29 +1,21 @@
 package com.example.masakuy.presentation.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.AttachMoney
-import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.example.masakuy.core.util.formatCurrency
 import com.example.masakuy.domain.model.Recipe
+import com.example.masakuy.theme.OrangeDark
 import com.example.masakuy.theme.OrangeMain
 
 @Composable
@@ -36,55 +28,110 @@ fun RecipeCard(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(14.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column {
-            AsyncImage(
-                model = recipe.image,
-                contentDescription = recipe.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentScale = ContentScale.Crop
-            )
-
-            Column(modifier = Modifier.padding(12.dp)) {
-                Text(
-                    text = recipe.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row {
-                    Icon(
-                        imageVector = Icons.Default.AttachMoney,
-                        contentDescription = null,
-                        modifier = Modifier.width(16.dp),
-                        tint = OrangeMain
-                    )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Emoji di kiri
+            Surface(
+                modifier = Modifier.size(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = OrangeMain.copy(alpha = 0.1f)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = formatCurrency(recipe.estimatedCost),
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = null,
-                        modifier = Modifier.width(16.dp),
-                        tint = OrangeMain
-                    )
-                    Text(
-                        text = "${recipe.estimatedTime} min",
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(start = 4.dp)
+                        text = getRecipeEmoji(recipe.name),
+                        fontSize = 26.sp
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Info tengah
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = recipe.name,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = formatRupiah(recipe.estimatedCost),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = OrangeDark
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null,
+                            modifier = Modifier.size(13.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "${recipe.estimatedTime} mnt",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (recipe.difficulty.isNotEmpty()) {
+                        Text(
+                            text = recipe.difficulty,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            // Favorit di kanan
+            if (recipe.isFavorite) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = "Favorit",
+                    tint = OrangeMain,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
+}
+
+private fun getRecipeEmoji(name: String): String {
+    val lower = name.lowercase()
+    return when {
+        lower.contains("ayam") -> "🍗"
+        lower.contains("soto") -> "🍲"
+        lower.contains("nasi") -> "🍚"
+        lower.contains("mie") || lower.contains("mi ") -> "🍜"
+        lower.contains("sate") -> "🍢"
+        lower.contains("ikan") -> "🐟"
+        lower.contains("udang") -> "🦐"
+        lower.contains("tahu") || lower.contains("tempe") -> "🫘"
+        lower.contains("sayur") -> "🥬"
+        lower.contains("sup") || lower.contains("sop") -> "🥣"
+        lower.contains("rendang") || lower.contains("gulai") -> "🍖"
+        lower.contains("bakso") -> "🍡"
+        lower.contains("telur") -> "🥚"
+        else -> "🍽️"
+    }
+}
+
+private fun formatRupiah(amount: Int): String {
+    return "Rp " + amount.toString().reversed().chunked(3).joinToString(".").reversed()
 }

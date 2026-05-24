@@ -1,36 +1,40 @@
 package com.example.masakuy.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
-private val DarkColorScheme = darkColorScheme(
-    primary = OrangeMain,
-    secondary = OrangeLight,
-    tertiary = TextDark
-)
+// ── Warna utama MasakuY ───────────────────────────────────────────────────────
+private val MasakuyColorScheme = lightColorScheme(
+    primary          = OrangeMain,
+    onPrimary        = Color.White,
+    primaryContainer = OrangeLight,
+    onPrimaryContainer = TextLight,
 
-private val LightColorScheme = lightColorScheme(
-    primary = OrangeMain,
-    secondary = OrangeLight,
-    tertiary = TextLight
+    secondary        = OrangeLight,
+    onSecondary      = Color.White,
+
+    background       = Color(0xFFFFFBF7),   // putih hangat
+    onBackground     = TextLight,
+
+    surface          = Color.White,
+    onSurface        = TextLight,
+
+    surfaceVariant   = LightGray,
+    onSurfaceVariant = DarkGray,
+
+    error            = Color(0xFFE53935),
+    onError          = Color.White,
 )
 
 @Composable
 fun MasakuyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = MasakuyTypography,
-        content = content
+        colorScheme = MasakuyColorScheme,
+        typography  = MasakuyTypography,
+        content     = content
     )
 }
