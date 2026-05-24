@@ -1,159 +1,170 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(file.inputStream())
+}
+
+fun localProp(key: String, default: String = ""): String =
+    localProperties.getProperty(key) ?: default
+
+val versionCodeProp = (System.getenv("VERSION_CODE")
+    ?: localProperties.getProperty("VERSION_CODE", "1")).toInt()
+val versionNameProp = System.getenv("VERSION_NAME")
+    ?: localProperties.getProperty("VERSION_NAME", "1.0.0")
+
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.sqldelight)
 }
 
-// Load local.properties for API keys
-val localProperties = Properties().apply {
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        load(localPropertiesFile.inputStream())
-    }
-}
-
-kotlin {
-    androidTarget {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_17)
-        }
-    }
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
-    
-    sourceSets {
-        commonMain.dependencies {
-            // Compose
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
-            
-            // Kotlin
-            implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
-            
-            // Ktor
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.serialization.json)
-            implementation(libs.ktor.client.logging)
-            
-            // Koin DI
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-            
-            // SQLDelight
-            implementation(libs.sqldelight.runtime)
-            implementation(libs.sqldelight.coroutines)
-            
-            // DataStore + Okio
-            implementation(libs.datastore.preferences)
-            implementation(libs.okio)
-            
-            // Lifecycle & ViewModel
-            implementation(libs.lifecycle.viewmodel)
-            implementation(libs.lifecycle.runtime.compose)
-            
-            // Navigation
-            implementation(libs.navigation.compose)
-            
-            // Coil
-            implementation(libs.coil.compose)
-            implementation(libs.coil.network.ktor)
-        }
-        
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-            implementation(libs.kotlinx.coroutines.test)
-            implementation(libs.turbine)
-        }
-        
-        androidMain.dependencies {
-            implementation(compose.preview)
-            implementation(libs.koin.android)
-            implementation(libs.ktor.client.okhttp)
-            implementation(libs.sqldelight.android.driver)
-        }
-        
-        iosMain.dependencies {
-            implementation(libs.ktor.client.darwin)
-            implementation(libs.sqldelight.native.driver)
-        }
-    }
-}
-
 android {
-    namespace = "com.example.noteai"
-    compileSdk = 35
-    
+    namespace  = "com.example.masakuy"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
     defaultConfig {
-        applicationId = "com.example.noteai"
-        minSdk = 24
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
-        
-        // Inject API key from local.properties
-        buildConfigField(
-            "String",
-            "GEMINI_API_KEY",
-            "\"${localProperties.getProperty("GEMINI_API_KEY", "")}\""
-        )
+        applicationId = "com.example.masakuy"
+        minSdk        = libs.versions.android.minSdk.get().toInt()
+        targetSdk     = libs.versions.android.targetSdk.get().toInt()
+        versionCode   = versionCodeProp
+        versionName   = versionNameProp
+
+        buildConfigField("String", "GEMINI_API_KEY",
+            "\"${localProp("GEMINI_API_KEY")}\"")
+        buildConfigField("String", "BASE_URL",
+            "\"${localProp("BASE_URL", "https://generativelanguage.googleapis.com/")}\"")
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
-    
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+
+    signingConfigs {
+        create("release") {
+            val keystoreFile = System.getenv("SIGNING_STORE_FILE")
+                ?: localProperties.getProperty("SIGNING_STORE_FILE")
+            if (keystoreFile != null) {
+                storeFile     = file(keystoreFile)
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: localProp("SIGNING_STORE_PASSWORD")
+                keyAlias      = System.getenv("SIGNING_KEY_ALIAS")      ?: localProp("SIGNING_KEY_ALIAS")
+                keyPassword   = System.getenv("SIGNING_KEY_PASSWORD")   ?: localProp("SIGNING_KEY_PASSWORD")
+            }
         }
     }
-    
+
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled   = true
+            isShrinkResources = true
+            signingConfig     = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "GEMINI_API_KEY",
+                "\"${localProp("GEMINI_API_KEY")}\"")
+            buildConfigField("String", "BASE_URL",
+                "\"${localProp("BASE_URL", "https://generativelanguage.googleapis.com/")}\"")
+        }
+        debug {
+            isDebuggable        = true
+            applicationIdSuffix = ".debug"
+            versionNameSuffix   = "-debug"
+            buildConfigField("String", "GEMINI_API_KEY",
+                "\"${localProp("GEMINI_API_KEY_DEBUG").ifEmpty { localProp("GEMINI_API_KEY") }}\"")
+            buildConfigField("String", "BASE_URL",
+                "\"${localProp("BASE_URL_DEBUG", "https://generativelanguage.googleapis.com/")}\"")
         }
     }
-    
-    buildFeatures {
-        buildConfig = true
-    }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = "17"
+        freeCompilerArgs += "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api"
+    }
+
+    buildFeatures {
+        compose     = true
+        buildConfig = true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/INDEX.LIST"
+            excludes += "META-INF/io.netty.versions.properties"
+        }
+    }
+
+    sourceSets {
+        getByName("main") {
+            java.srcDirs("src/androidMain/kotlin", "src/commonMain/kotlin")
+            res.srcDirs("src/androidMain/res")
+            manifest.srcFile("src/androidMain/AndroidManifest.xml")
+        }
     }
 }
 
 sqldelight {
     databases {
-        create("NoteDatabase") {
-            packageName.set("com.example.noteai.data.local")
+        create("MasakuyDatabase") {
+            packageName.set("com.example.masakuy.data.local")
+            srcDirs.setFrom("src/commonMain/sqldelight")
         }
     }
 }
+
+dependencies {
+    // Compose BOM
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons)
+    implementation(libs.androidx.activity.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // Lifecycle ViewModel
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
+
+    // SQLDelight
+    implementation(libs.sqldelight.android.driver)
+    implementation(libs.sqldelight.coroutines.extensions)
+
+    // Gemini AI
+    implementation(libs.generativeai)
+
+    // Ktor
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.client.logging)
+
+    // Kotlinx
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Test
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // Coil
+    implementation(libs.coil.compose)
+}
+

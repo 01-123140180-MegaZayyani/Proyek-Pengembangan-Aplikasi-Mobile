@@ -1,4 +1,5 @@
-rootProject.name = "NoteAI"
+rootProject.name = "Masakuy"
+
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
