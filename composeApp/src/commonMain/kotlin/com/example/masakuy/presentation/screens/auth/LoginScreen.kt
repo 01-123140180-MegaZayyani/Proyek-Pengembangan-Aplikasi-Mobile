@@ -11,8 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -40,91 +38,90 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFFFFF8F3), Color(0xFFFFEDD8))
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Logo
+            Text("👨\u200D🍳", fontSize = 56.sp, textAlign = TextAlign.Center)
+            Spacer(Modifier.height(8.dp))
             Text(
                 "Masakuy",
-                fontSize = 30.sp,
+                fontSize = 34.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF1A1A1A)
+                color = OrangeMain
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                "Cari ide makan sesuai budgetmu",
+                "Cari ide makan sesuai budgetmu.",
                 fontSize = 14.sp,
-                color = Color(0xFF888888),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
-            Spacer(Modifier.height(40.dp))
+            Spacer(Modifier.height(36.dp))
 
-            // Email
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("Email", color = Color(0xFFBBBBBB)) },
+                placeholder = { Text("Email", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                leadingIcon = { Text("✉️", fontSize = 17.sp, modifier = Modifier.padding(start = 4.dp)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(13.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = OrangeMain,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    focusedBorderColor     = OrangeMain,
+                    unfocusedBorderColor   = MaterialTheme.colorScheme.outline,
+                    unfocusedContainerColor= MaterialTheme.colorScheme.surface,
+                    focusedContainerColor  = MaterialTheme.colorScheme.surface,
+                    focusedTextColor       = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor     = MaterialTheme.colorScheme.onSurface,
                 )
             )
 
             Spacer(Modifier.height(12.dp))
 
-            // Password
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("Password", color = Color(0xFFBBBBBB)) },
+                placeholder = { Text("Password", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                leadingIcon = { Text("🔒", fontSize = 17.sp, modifier = Modifier.padding(start = 4.dp)) },
                 trailingIcon = {
                     IconButton(onClick = { showPassword = !showPassword }) {
                         Icon(
-                            if (showPassword) Icons.Default.VisibilityOff
-                            else Icons.Default.Visibility,
-                            null, tint = Color(0xFFBBBBBB)
+                            if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
-                visualTransformation = if (showPassword)
-                    VisualTransformation.None else PasswordVisualTransformation(),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(13.dp),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = OrangeMain,
-                    unfocusedBorderColor = Color(0xFFE0E0E0),
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
+                    focusedBorderColor     = OrangeMain,
+                    unfocusedBorderColor   = MaterialTheme.colorScheme.outline,
+                    unfocusedContainerColor= MaterialTheme.colorScheme.surface,
+                    focusedContainerColor  = MaterialTheme.colorScheme.surface,
+                    focusedTextColor       = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor     = MaterialTheme.colorScheme.onSurface,
                 )
             )
 
             if (uiState.error != null) {
                 Spacer(Modifier.height(8.dp))
-                Text(uiState.error!!, color = Color(0xFFE53935), fontSize = 12.sp)
+                Text(uiState.error!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // Tombol Masuk
             Button(
                 onClick = { viewModel.login(email, password) },
                 enabled = !uiState.isLoading,
@@ -133,33 +130,22 @@ fun LoginScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = OrangeMain)
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp
-                    )
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp), strokeWidth = 2.dp)
                 } else {
-                    Text("Masuk", fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold, color = Color.White)
+                    Text("Masuk", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // Tombol Daftar
             OutlinedButton(
                 onClick = { viewModel.login("guest", "guest") },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, OrangeMain)
+                border = androidx.compose.foundation.BorderStroke(2.dp, OrangeMain)
             ) {
-                Text("Daftar", fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold, color = OrangeMain)
+                Text("Daftar", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = OrangeMain)
             }
-
-            Spacer(Modifier.height(32.dp))
-            Text("Masakuy v1.0", fontSize = 11.sp, color = Color(0xFFCCCCCC))
         }
     }
 }
-
