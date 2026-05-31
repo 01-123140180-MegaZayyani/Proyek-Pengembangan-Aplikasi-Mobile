@@ -1,10 +1,10 @@
-package com.example.masakuy.data.mapper
+﻿package com.example.masakuy.data.mapper
 
 import com.example.masakuy.domain.model.Ingredient
 import com.example.masakuy.domain.model.Recipe
 import com.example.masakuy.domain.model.RecipeDetail
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 
 class RecipeMapper {
     fun mapRecipeDetailToRecipe(detail: RecipeDetail): Recipe {
@@ -32,6 +32,22 @@ class RecipeMapper {
             Json.decodeFromString(json)
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    fun serializeIngredients(ingredients: List<Ingredient>): String {
+        return try {
+            Json.encodeToString(ingredients)
+        } catch (e: Exception) {
+            "[]"
+        }
+    }
+
+    fun serializeInstructions(instructions: List<String>): String {
+        return try {
+            Json.encodeToString(instructions)
+        } catch (e: Exception) {
+            "[]"
         }
     }
 }

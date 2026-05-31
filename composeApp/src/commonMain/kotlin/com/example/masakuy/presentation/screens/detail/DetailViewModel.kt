@@ -1,10 +1,11 @@
-package com.example.masakuy.presentation.screens.detail
+﻿package com.example.masakuy.presentation.screens.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.masakuy.core.network.Result
 import com.example.masakuy.domain.model.RecipeDetail
-import com.example.masakuy.domain.usecase.GetRecipeDetailUseCase
+import com.example.masakuy.domain.repository.AIRepository
+import com.example.masakuy.domain.repository.RecipeRepository
 import com.example.masakuy.domain.usecase.SaveFavoriteUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,52 +15,66 @@ import kotlinx.coroutines.launch
 data class DetailUiState(
     val recipe: RecipeDetail? = null,
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val isFavorite: Boolean = false
+    val error: String? = null
 )
 
 class DetailViewModel(
-    private val getRecipeDetailUseCase: GetRecipeDetailUseCase,
-    private val saveFavoriteUseCase: SaveFavoriteUseCase
+    private val aiRepository: AIRepository,
+    private val saveFavoriteUseCase: SaveFavoriteUseCase,
+    private val recipeRepository: RecipeRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DetailUiState())
     val uiState: StateFlow<DetailUiState> = _uiState.asStateFlow()
 
-    fun loadRecipe(recipeId: String) {
+    fun loadRecipe(recipeId: String, recipeName: String, budget: Int) {
         viewModelScope.launch {
-            getRecipeDetailUseCase(recipeId).collect { result ->
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+            var dbData: RecipeDetail? = null
+            try {
+                recipeRepository.getRecipeById(recipeId).collect { result ->
+                    if (result is Result.Success) dbData = result.data
+                }
+            } catch (e: Exception) {}
+
+            val hasDetail = dbData != null &&
+                dbData!!.ingredients.isNotEmpty() &&
+                dbData!!.instructions.isNotEmpty()
+
+            if (hasDetail) {
+                _uiState.value = _uiState.value.copy(recipe = dbData, isLoading = false)
+                return@launch
+            }
+
+            val nameToUse = dbData?.name?.takeIf { it.isNotBlank() } ?: recipeName
+            val budgetToUse = if (budget > 0) budget else dbData?.estimatedCost ?: 15000
+
+            aiRepository.getRecipeDetail(nameToUse, budgetToUse).collect { result ->
                 when (result) {
-                    is Result.Loading -> {
-                        _uiState.value = _uiState.value.copy(isLoading = true)
-                    }
+                    is Result.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
                     is Result.Success -> {
-                        _uiState.value = _uiState.value.copy(
-                            recipe = result.data,
-                            isLoading = false,
-                            isFavorite = result.data.isFavorite
+                        val merged = result.data.copy(
+                            id = dbData?.id ?: result.data.id,
+                            isFavorite = dbData?.isFavorite ?: false
                         )
+                        try { recipeRepository.insertRecipe(merged) } catch (e: Exception) {}
+                        _uiState.value = _uiState.value.copy(recipe = merged, isLoading = false)
                     }
-                    is Result.Error -> {
-                        _uiState.value = _uiState.value.copy(
-                            error = result.exception.message,
-                            isLoading = false
-                        )
-                    }
+                    is Result.Error -> _uiState.value = _uiState.value.copy(
+                        error = result.exception.message, isLoading = false
+                    )
                 }
             }
         }
     }
 
-    fun toggleFavorite(recipeId: String) {
+    fun toggleFavorite(recipeId: String, isFavorite: Boolean) {
         viewModelScope.launch {
-            try {
-                val newFavoriteState = !_uiState.value.isFavorite
-                saveFavoriteUseCase(recipeId, newFavoriteState)
-                _uiState.value = _uiState.value.copy(isFavorite = newFavoriteState)
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
-            }
+            saveFavoriteUseCase(recipeId, isFavorite)
+            _uiState.value = _uiState.value.copy(
+                recipe = _uiState.value.recipe?.copy(isFavorite = isFavorite)
+            )
         }
     }
 }

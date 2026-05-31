@@ -10,15 +10,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +39,12 @@ private val popularMenus = listOf(
     Triple("Tumis Tahu Pedas", "Rp12.000", "🥘"),
 )
 
+private fun formatRp(amount: Int): String {
+    val s = amount.toString().reversed()
+    val chunks = s.chunked(3).joinToString(".").reversed()
+    return "Rp$chunks"
+}
+
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel(),
@@ -64,34 +66,17 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.surface)
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = null,
-                    tint = Color(0xFF888888),
-                    modifier = Modifier
-                        .size(26.dp)
-                        .clickable { onSearchClick() }
-                )
-                Text(
-                    "Masakuy",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = OrangeMain
-                )
-                Icon(
-                    Icons.Default.Notifications,
-                    contentDescription = null,
-                    tint = Color(0xFF888888),
-                    modifier = Modifier.size(26.dp)
-                )
+                Text("\uD83D\uDD0D", fontSize = 22.sp, modifier = Modifier.clickable { onSearchClick() })
+                Text("Masakuy", fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = OrangeMain)
+                Text("\uD83D\uDD14", fontSize = 22.sp)
             }
         },
-        containerColor = Color(0xFFFFFBF7)
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -99,60 +84,42 @@ fun HomeScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Greeting
             Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
-                Text(
-                    "Hai, mau makan",
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color(0xFF1A1A1A)
-                )
+                Text("Hai, mau makan", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        "apa hari ini?",
-                        fontSize = 26.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF1A1A1A)
-                    )
+                    Text("apa hari ini?", fontSize = 26.sp, fontWeight = FontWeight.ExtraBold)
                     Spacer(Modifier.width(6.dp))
                     Text("👋", fontSize = 26.sp)
                 }
             }
 
-            // Search bar dekoratif
             Row(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFE8E8E8), RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                     .clickable { onSearchClick() }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Search, null,
-                    tint = Color(0xFFBBBBBB), modifier = Modifier.size(20.dp))
+                Text("\uD83D\uDD0D", fontSize = 18.sp)
                 Spacer(Modifier.width(10.dp))
-                Text("Cari menu, bahan, atau budget...",
-                    fontSize = 14.sp, color = Color(0xFFBBBBBB))
+                Text("Cari menu, bahan, atau budget...", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
             Spacer(Modifier.height(20.dp))
 
-            // Budget section
             Card(
                 modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Budget kamu:", fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold, color = Color(0xFF444444))
+                    Text("Budget kamu:", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(10.dp))
-
-                    // Chips budget
                     Row(
                         modifier = Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -162,32 +129,16 @@ fun HomeScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50.dp))
-                                    .background(if (sel) OrangeMain else Color(0xFFF5F5F5))
-                                    .border(
-                                        1.dp,
-                                        if (sel) OrangeMain else Color(0xFFE0E0E0),
-                                        RoundedCornerShape(50.dp)
-                                    )
-                                    .clickable {
-                                        selectedBudget = value
-                                        customBudget = ""
-                                        budgetError = ""
-                                    }
+                                    .background(if (sel) OrangeMain else MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(1.dp, if (sel) OrangeMain else MaterialTheme.colorScheme.outline, RoundedCornerShape(50.dp))
+                                    .clickable { selectedBudget = value; customBudget = ""; budgetError = "" }
                                     .padding(horizontal = 16.dp, vertical = 9.dp)
                             ) {
-                                Text(
-                                    label,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (sel) Color.White else Color(0xFF555555)
-                                )
+                                Text(label, fontSize = 13.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal, color = if (sel) Color.White else MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
-
                     Spacer(Modifier.height(10.dp))
-
-                    // Input manual
                     OutlinedTextField(
                         value = customBudget,
                         onValueChange = {
@@ -195,77 +146,54 @@ fun HomeScreen(
                             if (customBudget.isNotEmpty()) selectedBudget = -1
                             budgetError = ""
                         },
-                        placeholder = {
-                            Text("Isi Sendiri",
-                                fontSize = 13.sp, color = Color(0xFFBBBBBB))
-                        },
-                        prefix = { Text("Rp ", color = Color(0xFF555555), fontSize = 13.sp) },
+                        placeholder = { Text("Isi Sendiri", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        prefix = { Text("Rp ", color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp) },
                         isError = budgetError.isNotEmpty(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = OrangeMain,
-                            unfocusedBorderColor = Color(0xFFE0E0E0),
-                            unfocusedContainerColor = Color(0xFFFAFAFA),
-                            focusedContainerColor = Color.White
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surface
                         )
                     )
                     if (budgetError.isNotEmpty()) {
-                        Text(budgetError, color = Color(0xFFE53935), fontSize = 11.sp)
+                        Text(budgetError, color = MaterialTheme.colorScheme.error, fontSize = 11.sp)
                     }
                 }
             }
 
             Spacer(Modifier.height(12.dp))
 
-            // CTA Button
             Button(
                 onClick = {
-                    val budget = if (customBudget.isNotEmpty())
-                        customBudget.toIntOrNull() ?: 0
-                    else selectedBudget
+                    val budget = if (customBudget.isNotEmpty()) customBudget.toIntOrNull() ?: 0 else selectedBudget
                     when {
                         budget <= 0 -> budgetError = "Pilih atau masukkan budget dulu"
                         budget < 5000 -> budgetError = "Minimal Rp 5.000"
-                        else -> {
-                            focusManager.clearFocus()
-                            onRecommendationClick(budget)
-                        }
+                        else -> { focusManager.clearFocus(); onRecommendationClick(budget) }
                     }
                 },
-                modifier = Modifier
-                    .padding(horizontal = 20.dp)
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OrangeMain),
-                elevation = ButtonDefaults.buttonElevation(0.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = OrangeMain)
             ) {
-                Text("Cari Rekomendasi 🔍", fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold, color = Color.White)
+                Text("Cari Rekomendasi 🔍", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
 
             Spacer(Modifier.height(24.dp))
 
-            // Rekomendasi Populer
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Rekomendasi Populer",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A))
-                TextButton(onClick = { onRecommendationClick(if (selectedBudget > 0) selectedBudget else if (customBudget.isNotEmpty()) customBudget.toIntOrNull() ?: 15000 else 15000) }) {
+                Text("Rekomendasi Populer", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                TextButton(onClick = { onRecommendationClick(if (selectedBudget > 0) selectedBudget else customBudget.toIntOrNull() ?: 15000) }) {
                     Text("Lihat semua >", fontSize = 12.sp, color = OrangeMain)
                 }
             }
@@ -273,45 +201,25 @@ fun HomeScreen(
             Spacer(Modifier.height(4.dp))
 
             Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 popularMenus.forEach { (name, price, emoji) ->
                     Card(
-                        modifier = Modifier
-                            .width(120.dp)
-                            .clickable { onRecommendationClick(15000) }, shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        modifier = Modifier.width(120.dp).clickable { onRecommendationClick(15000) },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(2.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(14.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        Column(modifier = Modifier.padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             Box(
-                                modifier = Modifier
-                                    .size(68.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(Color(0xFFFFF3ED)),
+                                modifier = Modifier.size(68.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
-                            ) {
-                                Text(emoji, fontSize = 34.sp)
-                            }
+                            ) { Text(emoji, fontSize = 34.sp) }
                             Spacer(Modifier.height(10.dp))
-                            Text(name,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF1A1A1A),
-                                maxLines = 2,
-                                lineHeight = 16.sp,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                            Text(name, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, lineHeight = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                             Spacer(Modifier.height(5.dp))
-                            Text(price,
-                                fontSize = 12.sp,
-                                color = OrangeMain,
-                                fontWeight = FontWeight.Bold)
+                            Text(price, fontSize = 12.sp, color = OrangeMain, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -323,31 +231,48 @@ fun HomeScreen(
             Card(
                 modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(1.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expandFavorit = !expandFavorit }
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().clickable { expandFavorit = !expandFavorit }.padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("⭐", fontSize = 18.sp)
                         Spacer(Modifier.width(10.dp))
-                        Text("Menu Hemat Favorit", fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
+                        Text("Menu Hemat Favorit", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
-                    Text(if (expandFavorit) "▲" else "▼",
-                        fontSize = 12.sp, color = Color(0xFF888888))
+                    Text(if (expandFavorit) "▲" else "▼", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (expandFavorit) {
-                    HorizontalDivider(color = Color(0xFFF0F0F0))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Box(modifier = Modifier.padding(16.dp)) {
-                        Text("Belum ada favorit. Simpan resep dari hasil rekomendasi!",
-                            fontSize = 13.sp, color = Color(0xFF888888))
+                        if (uiState.favorites.isEmpty()) {
+                            Text("Belum ada favorit. Simpan resep dari hasil rekomendasi!", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                uiState.favorites.take(3).forEach { recipe ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().clickable { onRecipeClick(recipe.id) },
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("🍽️", fontSize = 20.sp)
+                                        Spacer(Modifier.width(10.dp))
+                                        Column {
+                                            Text(recipe.name, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                            Text(formatRp(recipe.estimatedCost), fontSize = 11.sp, color = OrangeMain)
+                                        }
+                                    }
+                                }
+                                if (uiState.favorites.size > 3) {
+                                    TextButton(onClick = onFavoriteClick) {
+                                        Text("Lihat semua favorit >", fontSize = 12.sp, color = OrangeMain)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -358,48 +283,38 @@ fun HomeScreen(
             Card(
                 modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                 elevation = CardDefaults.cardElevation(1.dp)
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expandHistory = !expandHistory }
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().clickable { expandHistory = !expandHistory }.padding(16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("❤️", fontSize = 18.sp)
                         Spacer(Modifier.width(10.dp))
-                        Text("Menu yang Pernah Disimpan", fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold, color = Color(0xFF1A1A1A))
+                        Text("Menu yang Pernah Disimpan", fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     }
-                    Text(if (expandHistory) "▲" else "▼",
-                        fontSize = 12.sp, color = Color(0xFF888888))
+                    Text(if (expandHistory) "▲" else "▼", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (expandHistory) {
-                    HorizontalDivider(color = Color(0xFFF0F0F0))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     Box(modifier = Modifier.padding(16.dp)) {
                         if (uiState.recipes.isEmpty()) {
-                            Text("Belum ada resep tersimpan.",
-                                fontSize = 13.sp, color = Color(0xFF888888))
+                            Text("Belum ada resep tersimpan.", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         } else {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 uiState.recipes.take(3).forEach { recipe ->
                                     Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clickable { onRecipeClick(recipe.id) },
+                                        modifier = Modifier.fillMaxWidth().clickable { onRecipeClick(recipe.id) },
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text("🍽️", fontSize = 20.sp)
                                         Spacer(Modifier.width(10.dp))
                                         Column {
-                                            Text(recipe.name, fontSize = 13.sp,
-                                                fontWeight = FontWeight.Medium)
-                                            Text("Estimasi: Rp",
-                                                fontSize = 11.sp, color = OrangeMain)
+                                            Text(recipe.name, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                                            Text(formatRp(recipe.estimatedCost), fontSize = 11.sp, color = OrangeMain)
                                         }
                                     }
                                 }
@@ -413,5 +328,3 @@ fun HomeScreen(
         }
     }
 }
-
-

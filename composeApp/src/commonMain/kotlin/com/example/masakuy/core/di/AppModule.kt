@@ -1,12 +1,12 @@
-package com.example.masakuy.core.di
+﻿package com.example.masakuy.core.di
 
 import com.example.masakuy.core.network.HttpClientFactory
 import com.example.masakuy.core.util.DatabaseDriverFactory
 import com.example.masakuy.data.local.database.MasakuyDatabase
-import com.example.masakuy.data.repository.RecipeSeeder
 import com.example.masakuy.data.mapper.RecipeMapper
 import com.example.masakuy.data.repository.AIRepositoryImpl
 import com.example.masakuy.data.repository.RecipeRepositoryImpl
+import com.example.masakuy.data.repository.RecipeSeeder
 import com.example.masakuy.domain.repository.AIRepository
 import com.example.masakuy.domain.repository.RecipeRepository
 import com.example.masakuy.domain.usecase.GetRecipeDetailUseCase
@@ -27,21 +27,26 @@ import org.koin.dsl.module
 fun appModule() = module {
     single { HttpClientFactory.create() }
     single { GeminiService(get()) }
+
     single {
         val driver = DatabaseDriverFactory(androidContext()).createDriver()
         MasakuyDatabase(driver).also { RecipeSeeder(it).seedIfEmpty() }
     }
+
     single { RecipeMapper() }
+
     single<RecipeRepository> { RecipeRepositoryImpl(database = get(), mapper = get()) }
     single<AIRepository> { AIRepositoryImpl(geminiService = get()) }
+
     single { GetRecipesUseCase(get()) }
     single { GetRecipeDetailUseCase(get()) }
     single { SaveFavoriteUseCase(get()) }
     single { GetRecommendationUseCase(get(), get()) }
+
     viewModel { LoginViewModel() }
     viewModel { HomeViewModel(get()) }
     viewModel { RecommendationViewModel(get()) }
-    viewModel { DetailViewModel(get(), get()) }
-    viewModel { FavoriteViewModel(get()) }
+    viewModel { DetailViewModel(get(), get(), get()) }
+    viewModel { FavoriteViewModel(getRecipesUseCase = get(), saveFavoriteUseCase = get()) }
     viewModel { SearchViewModel(get()) }
 }

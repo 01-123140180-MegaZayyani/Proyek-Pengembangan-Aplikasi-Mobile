@@ -12,9 +12,9 @@ import kotlinx.coroutines.launch
 
 data class HomeUiState(
     val recipes: List<Recipe> = emptyList(),
+    val favorites: List<Recipe> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val selectedBudget: Int? = null
+    val error: String? = null
 )
 
 class HomeViewModel(
@@ -24,35 +24,24 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
-    init {
-        loadRecipes()
-    }
+    init { loadRecipes() }
 
     fun loadRecipes() {
         viewModelScope.launch {
             getRecipesUseCase().collect { result ->
                 when (result) {
-                    is Result.Loading -> {
-                        _uiState.value = _uiState.value.copy(isLoading = true)
-                    }
-                    is Result.Success -> {
-                        _uiState.value = _uiState.value.copy(
-                            recipes = result.data,
-                            isLoading = false
-                        )
-                    }
-                    is Result.Error -> {
-                        _uiState.value = _uiState.value.copy(
-                            error = result.exception.message,
-                            isLoading = false
-                        )
-                    }
+                    is Result.Loading -> _uiState.value = _uiState.value.copy(isLoading = true)
+                    is Result.Success -> _uiState.value = _uiState.value.copy(
+                        recipes = result.data,
+                        favorites = result.data.filter { it.isFavorite },
+                        isLoading = false
+                    )
+                    is Result.Error -> _uiState.value = _uiState.value.copy(
+                        error = result.exception.message,
+                        isLoading = false
+                    )
                 }
             }
         }
-    }
-
-    fun selectBudget(budget: Int) {
-        _uiState.value = _uiState.value.copy(selectedBudget = budget)
     }
 }

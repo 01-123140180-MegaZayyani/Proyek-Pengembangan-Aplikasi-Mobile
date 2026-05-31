@@ -1,4 +1,4 @@
-package com.example.masakuy.domain.repository
+﻿package com.example.masakuy.domain.repository
 
 import com.example.masakuy.core.network.Result
 import com.example.masakuy.domain.model.Recipe
@@ -12,4 +12,5 @@ interface RecipeRepository {
     fun getRecipesByBudget(budget: Int): Flow<Result<List<Recipe>>>
     suspend fun saveFavorite(recipeId: String, isFavorite: Boolean)
     fun getFavoriteRecipes(): Flow<Result<List<Recipe>>>
+    suspend fun insertRecipe(detail: RecipeDetail)
 }
