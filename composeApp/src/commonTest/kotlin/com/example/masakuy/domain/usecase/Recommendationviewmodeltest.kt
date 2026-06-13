@@ -1,4 +1,4 @@
-package com.example.masakuy.domain.usecase
+﻿package com.example.masakuy.domain.usecase
 
 import com.example.masakuy.core.network.Result
 import com.example.masakuy.domain.model.Recipe
@@ -87,6 +87,69 @@ class RecommendationViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isLoading)
         assertTrue(state.error != null, "Pesan error di UI State tidak boleh null")
+        assertEquals(0, state.retryCountdown)
+    }
+
+    @Test
+    fun `getRecommendations Error rate limit set retryCountdown dan pesan rate limit`() = runTest {
+        val exception = Exception("Error 429 terlalu banyak permintaan")
+        coEvery {
+            getRecommendationUseCase(budget = 30000, ingredients = emptyList())
+        } returns flowOf(Result.Error(exception))
+
+        viewModel = RecommendationViewModel(getRecommendationUseCase, testDispatcher)
+        viewModel.getRecommendations(30000)
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertTrue(state.error != null)
+        assertTrue(state.retryCountdown > 0)
+    }
+
+    @Test
+    fun `getRecommendations Error quota set retryCountdown`() = runTest {
+        val exception = Exception("quota exceeded 60 detik")
+        coEvery {
+            getRecommendationUseCase(budget = 30000, ingredients = emptyList())
+        } returns flowOf(Result.Error(exception))
+
+        viewModel = RecommendationViewModel(getRecommendationUseCase, testDispatcher)
+        viewModel.getRecommendations(30000)
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.retryCountdown > 0)
+        assertTrue(state.error != null)
+    }
+
+    @Test
+    fun `getRecommendations Error rate limit tanpa angka pakai default 60 detik`() = runTest {
+        val exception = Exception("rate limit exceeded")
+        coEvery {
+            getRecommendationUseCase(budget = 30000, ingredients = emptyList())
+        } returns flowOf(Result.Error(exception))
+
+        viewModel = RecommendationViewModel(getRecommendationUseCase, testDispatcher)
+        viewModel.getRecommendations(30000)
+        runCurrent()
+
+        val state = viewModel.uiState.value
+        assertEquals(60, state.retryCountdown)
+    }
+
+    @Test
+    fun `getRecommendations sukses set retryCountdown ke 0`() = runTest {
+        coEvery {
+            getRecommendationUseCase(budget = 50000, ingredients = emptyList())
+        } returns flowOf(Result.Success(dummyRecipes))
+
+        viewModel = RecommendationViewModel(getRecommendationUseCase, testDispatcher)
+        viewModel.getRecommendations(50000)
+        advanceUntilIdle()
+
+        assertEquals(0, viewModel.uiState.value.retryCountdown)
+        assertNull(viewModel.uiState.value.error)
     }
 
     @Test
@@ -94,6 +157,44 @@ class RecommendationViewModelTest {
         viewModel = RecommendationViewModel(mockk(), testDispatcher)
         viewModel.toggleIngredient("Telur")
         advanceUntilIdle()
+
         assertTrue(viewModel.uiState.value.selectedIngredients.contains("Telur"))
+    }
+
+    @Test
+    fun `toggleIngredient menghapus ingredient jika sudah ada`() = runTest {
+        viewModel = RecommendationViewModel(mockk(), testDispatcher)
+        viewModel.toggleIngredient("Telur")
+        viewModel.toggleIngredient("Telur")
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.selectedIngredients.contains("Telur"))
+    }
+
+    @Test
+    fun `toggleIngredient bisa tambah beberapa ingredient sekaligus`() = runTest {
+        viewModel = RecommendationViewModel(mockk(), testDispatcher)
+        viewModel.toggleIngredient("Telur")
+        viewModel.toggleIngredient("Bawang")
+        viewModel.toggleIngredient("Nasi")
+        advanceUntilIdle()
+
+        val ingredients = viewModel.uiState.value.selectedIngredients
+        assertEquals(3, ingredients.size)
+        assertTrue(ingredients.containsAll(listOf("Telur", "Bawang", "Nasi")))
+    }
+
+    @Test
+    fun `getRecommendations dengan ingredients terpilih meneruskan ke usecase`() = runTest {
+        coEvery {
+            getRecommendationUseCase(budget = 50000, ingredients = listOf("Telur"))
+        } returns flowOf(Result.Success(dummyRecipes))
+
+        viewModel = RecommendationViewModel(getRecommendationUseCase, testDispatcher)
+        viewModel.toggleIngredient("Telur")
+        viewModel.getRecommendations(50000)
+        advanceUntilIdle()
+
+        assertEquals(5, viewModel.uiState.value.recipes.size)
     }
 }

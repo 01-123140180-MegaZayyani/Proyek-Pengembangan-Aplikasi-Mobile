@@ -49,3 +49,6 @@
 
 # Coil
 -dontwarn coil.**
+# Ignore missing JDBC classes from sqlite-jdbc (not used on Android)
+-dontwarn java.sql.**
+-dontwarn org.sqlite.**

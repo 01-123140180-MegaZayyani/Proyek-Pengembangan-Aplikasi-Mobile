@@ -1,4 +1,4 @@
-﻿package com.example.masakuy.presentation.screens.detail
+package com.example.masakuy.presentation.screens.detail
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -10,6 +10,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.SoupKitchen
+import androidx.compose.material.icons.filled.RamenDining
+import androidx.compose.material.icons.filled.BakeryDining
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,11 +43,21 @@ private fun formatRp(amount: Int): String {
 
 // Pesan loading yang berganti-ganti agar tidak terasa lama
 private val loadingMessages = listOf(
-    "Menghubungi dapur AI... 🍳",
+    "Menghubungi dapur AI... ??",
     "Mencari resep terbaik buat kamu...",
     "Menghitung bahan dan estimasi harga...",
     "Hampir selesai, sabar ya!"
 )
+
+private fun recipeIcon(name: String): androidx.compose.ui.graphics.vector.ImageVector {
+    val n = name.lowercase()
+    return when {
+        n.contains("soto") || n.contains("sup") || n.contains("sayur") -> Icons.Default.SoupKitchen
+        n.contains("mie") || n.contains("bakso") -> Icons.Default.RamenDining
+        n.contains("roti") || n.contains("kue") -> Icons.Default.BakeryDining
+        else -> Icons.Default.Restaurant
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,10 +124,10 @@ fun DetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(220.dp)
-                            .background(Color(0xFF5A2400)),
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("🍽️", fontSize = 72.sp)
+                        Icon(recipeIcon(recipe.name), contentDescription = null, modifier = Modifier.size(72.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
 
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -115,27 +136,27 @@ fun DetailScreen(
 
                         // Chips info
                         Row {
-                            Surface(color = Color(0xFF5A2400), shape = RoundedCornerShape(12.dp)) {
+                            Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                                 Text(
-                                    "💰 ${formatRp(recipe.estimatedCost)}",
+                                    "${formatRp(recipe.estimatedCost)}",
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                     color = OrangeMain, fontWeight = FontWeight.Bold
                                 )
                             }
                             Spacer(Modifier.width(10.dp))
-                            Surface(color = Color(0xFF3A3A3A), shape = RoundedCornerShape(12.dp)) {
+                            Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                                 Text(
-                                    "⏱ ${recipe.estimatedTime} menit",
+                                    "${recipe.estimatedTime} menit",
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    color = Color.White, fontWeight = FontWeight.Medium
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium
                                 )
                             }
                             Spacer(Modifier.width(10.dp))
-                            Surface(color = Color(0xFF3A3A3A), shape = RoundedCornerShape(12.dp)) {
+                            Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(12.dp)) {
                                 Text(
-                                    "📊 ${recipe.difficulty}",
+                                    "${recipe.difficulty}",
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    color = Color.White, fontWeight = FontWeight.Medium
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -146,20 +167,20 @@ fun DetailScreen(
                         Text("Bahan-bahan", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(14.dp))
                         if (recipe.ingredients.isEmpty()) {
-                            Text("Tidak ada data bahan.", color = Color.Gray, fontSize = 14.sp)
+                            Text("Tidak ada data bahan.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         } else {
                             recipe.ingredients.forEach { bahan ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(vertical = 4.dp)
-                                        .background(Color(0xFF2A2A2A), RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        bahan.name, color = Color.White,
+                                        bahan.name, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 14.sp, modifier = Modifier.weight(1f)
                                     )
                                     if (bahan.estimatedPrice > 0)
@@ -174,7 +195,7 @@ fun DetailScreen(
                         Text("Cara Membuat", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.height(14.dp))
                         if (recipe.instructions.isEmpty()) {
-                            Text("Tidak ada instruksi.", color = Color.Gray, fontSize = 14.sp)
+                            Text("Tidak ada instruksi.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         } else {
                             recipe.instructions.forEachIndexed { index, step ->
                                 Row(
@@ -196,7 +217,7 @@ fun DetailScreen(
                                     }
                                     Spacer(Modifier.width(10.dp))
                                     Text(
-                                        step, color = Color.White,
+                                        step, color = MaterialTheme.colorScheme.onBackground,
                                         fontSize = 14.sp, modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -216,7 +237,7 @@ fun DetailScreen(
                             )
                         ) {
                             Text(
-                                text = if (recipe.isFavorite) "🗑️ Hapus dari Favorit" else "🤍 Simpan ke Favorit",
+                                text = if (recipe.isFavorite) "Hapus dari Favorit" else "Simpan ke Favorit",
                                 color = Color.White, fontWeight = FontWeight.Bold,
                                 fontSize = 17.sp, textAlign = TextAlign.Center
                             )
@@ -230,7 +251,7 @@ fun DetailScreen(
 }
 
 // ---------------------------------------------------------------------------
-// Loading State — animasi pulsing + pesan berganti tiap 2.5 detik
+// Loading State � animasi pulsing + pesan berganti tiap 2.5 detik
 // ---------------------------------------------------------------------------
 @Composable
 private fun DetailLoadingState(modifier: Modifier = Modifier) {
@@ -277,7 +298,7 @@ private fun DetailLoadingState(modifier: Modifier = Modifier) {
 }
 
 // ---------------------------------------------------------------------------
-// Error State — pesan friendly + tombol coba lagi
+// Error State � pesan friendly + tombol coba lagi
 // ---------------------------------------------------------------------------
 @Composable
 private fun DetailErrorState(
@@ -296,19 +317,19 @@ private fun DetailErrorState(
             errorMessage.contains("timeout") ||
             errorMessage.contains("SocketTimeout")
 
-    val (emoji, title, subtitle) = when {
+    val (emojiIcon, title, subtitle) = when {
         isRateLimit -> Triple(
-            "⏳",
+            Icons.Default.HourglassEmpty,
             "AI-nya lagi sibuk!",
             "Terlalu banyak permintaan sekarang. Tunggu sebentar lalu coba lagi."
         )
         isNetwork -> Triple(
-            "📡",
+            Icons.Default.WifiOff,
             "Koneksi bermasalah",
             "Periksa koneksi internet kamu, lalu coba lagi."
         )
         else -> Triple(
-            "😕",
+            Icons.Default.ErrorOutline,
             "Gagal memuat resep",
             "Terjadi kesalahan saat mengambil detail resep. Coba lagi ya!"
         )
@@ -322,7 +343,7 @@ private fun DetailErrorState(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            Text(emoji, fontSize = 56.sp)
+            Icon(emojiIcon, contentDescription = null, modifier = Modifier.size(56.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             Text(
                 title,
@@ -353,3 +374,24 @@ private fun DetailErrorState(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,138 +1,128 @@
-package com.example.masakuy.data.repository
+﻿package com.example.masakuy.domain.usecase
 
 import com.example.masakuy.core.network.Result
 import com.example.masakuy.domain.model.Ingredient
 import com.example.masakuy.domain.model.Recipe
 import com.example.masakuy.domain.model.RecipeDetail
+import com.example.masakuy.data.repository.AIRepositoryImpl
 import com.example.masakuy.presentation.screens.api.GeminiService
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
+import org.junit.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertIs
 
-/**
- * Tests for AIRepositoryImpl success path and Result mapping.
- *
- * GeminiService is a final class wrapping HttpClient + BuildConfig + Android
- * Log, so it's mocked with MockK rather than instantiated directly.
- *
- * Requires test dependency:
- *   testImplementation("io.mockk:mockk:1.13.x")
- */
-class AIRepositoryImplTest {
+class AIRepositoryImplNewTest {
 
     private val geminiService = mockk<GeminiService>()
     private val repository = AIRepositoryImpl(geminiService)
 
-    private fun sampleRecipes(budget: Int) = listOf(
-        Recipe(id = "gemini_1", name = "Nasi Goreng", image = "", estimatedCost = 10000, estimatedTime = 30, difficulty = "Mudah", isFavorite = false),
-        Recipe(id = "gemini_2", name = "Tempe Goreng", image = "", estimatedCost = 5000, estimatedTime = 15, difficulty = "Mudah", isFavorite = false),
-        Recipe(id = "gemini_3", name = "Sayur Asem", image = "", estimatedCost = 8000, estimatedTime = 25, difficulty = "Mudah", isFavorite = false),
-        Recipe(id = "gemini_4", name = "Telur Dadar", image = "", estimatedCost = 6000, estimatedTime = 10, difficulty = "Mudah", isFavorite = false),
-        Recipe(id = "gemini_5", name = "Tahu Bacem", image = "", estimatedCost = 7000, estimatedTime = 20, difficulty = "Mudah", isFavorite = false)
-    ).map { it.copy(estimatedCost = it.estimatedCost.coerceAtMost(budget)) }
-
-    private fun sampleDetail(name: String, budget: Int) = RecipeDetail(
-        id = "gemini_detail_${name.hashCode()}",
-        name = name,
-        image = "",
-        estimatedCost = budget,
-        estimatedTime = 30,
-        difficulty = "Mudah",
-        ingredients = listOf(
-            Ingredient(name = "beras", quantity = "", estimatedPrice = 3000),
-            Ingredient(name = "telur", quantity = "", estimatedPrice = 4000)
-        ),
-        instructions = listOf("Langkah pertama memasak", "Langkah kedua memasak")
+    private val dummyRecipes = listOf(
+        Recipe(
+            id = "r1", name = "Nasi Goreng", image = "",
+            estimatedCost = 15000, estimatedTime = 20,
+            difficulty = "Mudah", isFavorite = false
+        )
     )
 
-    // ---- getRecommendation: success ----
+    private val dummyDetail = RecipeDetail(
+        id = "r1", name = "Nasi Goreng", image = "",
+        estimatedCost = 15000, estimatedTime = 20,
+        difficulty = "Mudah", isFavorite = false,
+        ingredients = listOf(
+            Ingredient(name = "Nasi", quantity = "2 piring", estimatedPrice = 5000)
+        ),
+        instructions = listOf("Panaskan minyak", "Masukkan nasi")
+    )
 
     @Test
-    fun `getRecommendation emits Loading then Success with 5 recipes`() = runTest {
-        val budget = 15000
-        coEvery { geminiService.getRecommendation(budget) } returns sampleRecipes(budget)
+    fun `getRecommendation emit Loading lalu Success`() = runTest {
+        coEvery { geminiService.getRecommendation(50000) } returns dummyRecipes
 
-        val emissions = repository.getRecommendation(budget).toList()
+        val results = repository.getRecommendation(50000, emptyList(), "").toList()
 
-        assertEquals(Result.Loading, emissions[0])
-        val success = emissions[1] as Result.Success
-        assertEquals(5, success.data.size)
+        assertEquals(2, results.size)
+        assertIs<Result.Loading>(results[0])
+        assertIs<Result.Success<List<Recipe>>>(results[1])
+        assertEquals(1, (results[1] as Result.Success).data.size)
     }
 
     @Test
-    fun `getRecommendation success result respects budget constraint`() = runTest {
-        val budget = 8000
-        coEvery { geminiService.getRecommendation(budget) } returns sampleRecipes(budget)
+    fun `getRecommendation emit Loading lalu Error saat RateLimitException`() = runTest {
+        coEvery { geminiService.getRecommendation(any()) } throws
+                GeminiService.RateLimitException(30L)
 
-        val result = repository.getRecommendation(budget).toList().last() as Result.Success
+        val results = repository.getRecommendation(50000, emptyList(), "").toList()
 
-        assertTrue(result.data.all { it.estimatedCost <= budget })
+        assertEquals(2, results.size)
+        assertIs<Result.Loading>(results[0])
+        assertIs<Result.Error>(results[1])
+        val error = results[1] as Result.Error
+        assertIs<GeminiService.RateLimitException>(error.exception)
     }
 
     @Test
-    fun `getRecommendation passes ingredients and preferences without error even though GeminiService ignores them`() = runTest {
-        val budget = 20000
-        coEvery { geminiService.getRecommendation(budget) } returns sampleRecipes(budget)
+    fun `getRecommendation emit Loading lalu Error saat ApiException`() = runTest {
+        coEvery { geminiService.getRecommendation(any()) } throws
+                GeminiService.ApiException("API error")
 
-        val result = repository.getRecommendation(
-            budget = budget,
-            ingredients = listOf("ayam", "tempe"),
-            preferences = "pedas"
-        ).toList().last() as Result.Success
+        val results = repository.getRecommendation(50000, emptyList(), "").toList()
 
-        assertEquals(5, result.data.size)
+        assertEquals(2, results.size)
+        assertIs<Result.Loading>(results[0])
+        assertIs<Result.Error>(results[1])
+        val error = results[1] as Result.Error
+        assertIs<GeminiService.ApiException>(error.exception)
     }
 
     @Test
-    fun `getRecommendation with empty list from GeminiService returns Success with empty list`() = runTest {
-        val budget = 1000
-        coEvery { geminiService.getRecommendation(budget) } returns emptyList()
+    fun `getRecommendation emit Error generik saat Exception biasa`() = runTest {
+        coEvery { geminiService.getRecommendation(any()) } throws
+                RuntimeException("Network error")
 
-        val result = repository.getRecommendation(budget).toList().last() as Result.Success
+        val results = repository.getRecommendation(50000, emptyList(), "").toList()
 
-        assertTrue(result.data.isEmpty())
-    }
-
-    // ---- getRecipeDetail: success ----
-
-    @Test
-    fun `getRecipeDetail emits Loading then Success with parsed detail`() = runTest {
-        val name = "Nasi Goreng"
-        val budget = 15000
-        coEvery { geminiService.getRecipeDetail(name, budget) } returns sampleDetail(name, budget)
-
-        val emissions = repository.getRecipeDetail(name, budget).toList()
-
-        assertEquals(Result.Loading, emissions[0])
-        val success = emissions[1] as Result.Success
-        assertEquals(name, success.data.name)
-        assertEquals(2, success.data.ingredients.size)
-        assertEquals(2, success.data.instructions.size)
+        assertEquals(2, results.size)
+        assertIs<Result.Error>(results[1])
+        val error = results[1] as Result.Error
+        assertEquals("Gagal terhubung ke AI.", error.exception.message)
     }
 
     @Test
-    fun `getRecipeDetail success result has correct estimatedCost from budget`() = runTest {
-        val name = "Soto Ayam"
-        val budget = 20000
-        coEvery { geminiService.getRecipeDetail(name, budget) } returns sampleDetail(name, budget)
+    fun `getRecipeDetail emit Loading lalu Success`() = runTest {
+        coEvery { geminiService.getRecipeDetail("Nasi Goreng", 15000) } returns dummyDetail
 
-        val result = repository.getRecipeDetail(name, budget).toList().last() as Result.Success
+        val results = repository.getRecipeDetail("Nasi Goreng", 15000).toList()
 
-        assertEquals(budget, result.data.estimatedCost)
+        assertEquals(2, results.size)
+        assertIs<Result.Loading>(results[0])
+        assertIs<Result.Success<RecipeDetail>>(results[1])
+        assertEquals("Nasi Goreng", (results[1] as Result.Success).data.name)
     }
 
     @Test
-    fun `getRecipeDetail success result has isFavorite false by default`() = runTest {
-        val name = "Rendang"
-        val budget = 30000
-        coEvery { geminiService.getRecipeDetail(name, budget) } returns sampleDetail(name, budget)
+    fun `getRecipeDetail emit Error saat ApiException`() = runTest {
+        coEvery { geminiService.getRecipeDetail(any(), any()) } throws
+                GeminiService.ApiException("Parsing error")
 
-        val result = repository.getRecipeDetail(name, budget).toList().last() as Result.Success
+        val results = repository.getRecipeDetail("Nasi Goreng", 15000).toList()
 
-        assertEquals(false, result.data.isFavorite)
+        assertEquals(2, results.size)
+        assertIs<Result.Error>(results[1])
+        assertIs<GeminiService.ApiException>((results[1] as Result.Error).exception)
+    }
+
+    @Test
+    fun `getRecipeDetail emit Error generik saat Exception biasa`() = runTest {
+        coEvery { geminiService.getRecipeDetail(any(), any()) } throws
+                RuntimeException("Timeout")
+
+        val results = repository.getRecipeDetail("Nasi Goreng", 15000).toList()
+
+        assertEquals(2, results.size)
+        assertIs<Result.Error>(results[1])
+        assertEquals("Gagal ambil detail resep.", (results[1] as Result.Error).exception.message)
     }
 }

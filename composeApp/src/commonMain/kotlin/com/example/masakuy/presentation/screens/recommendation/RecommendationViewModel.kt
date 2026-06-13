@@ -1,4 +1,4 @@
-package com.example.masakuy.presentation.screens.recommendation
+﻿package com.example.masakuy.presentation.screens.recommendation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -99,7 +99,6 @@ class RecommendationViewModel(
                 delay(1000)
             }
             _uiState.value = _uiState.value.copy(retryCountdown = 0, error = null)
-            getRecommendations(budget)
         }
     }
 
