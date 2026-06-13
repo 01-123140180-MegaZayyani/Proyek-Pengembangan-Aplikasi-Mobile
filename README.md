@@ -13,7 +13,7 @@ Aplikasi rekomendasi resep masakan berbasis AI yang membantu pengguna menemukan 
 
 | NIM | Nama | Role |
 |-----|------|------|
-| 123140133 | Silvia | @github-username |
+| 123140133 | Silvia | @Silvia-vyA |
 | 123140180 | Mega Zayyani | @github-username |
 
 ## 📝 Description
