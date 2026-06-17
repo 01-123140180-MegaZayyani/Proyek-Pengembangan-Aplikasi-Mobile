@@ -16,13 +16,14 @@ Aplikasi rekomendasi resep masakan berbasis AI yang membantu pengguna menemukan 
 | 123140133 | Silvia | @Silvia-vyA |
 | 123140180 | Mega Zayyani | @01-123140180-MegaZayyani |
 
+## 📹 Link video demo
+
+https://youtu.be/POT6TuyMJ84
+
 ## 📝 Description
 
 MasaKuy adalah aplikasi mobile yang membantu pengguna—terutama mahasiswa dan masyarakat dengan budget terbatas—menemukan resep masakan rumahan yang sesuai dengan anggaran dan bahan yang dimiliki. Pengguna cukup memasukkan budget dan bahan yang tersedia, lalu aplikasi akan memberikan rekomendasi resep lengkap dengan estimasi biaya, waktu memasak, tingkat kesulitan, daftar bahan, dan langkah-langkah pembuatan menggunakan bantuan AI (Gemini).
 
-## 📹 Link video demo
-
-https://youtu.be/POT6TuyMJ84
 
 ## ✨ Fitur & Tampilan Aplikasi
 
