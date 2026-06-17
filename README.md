@@ -20,6 +20,10 @@ Aplikasi rekomendasi resep masakan berbasis AI yang membantu pengguna menemukan 
 
 MasaKuy adalah aplikasi mobile yang membantu pengguna—terutama mahasiswa dan masyarakat dengan budget terbatas—menemukan resep masakan rumahan yang sesuai dengan anggaran dan bahan yang dimiliki. Pengguna cukup memasukkan budget dan bahan yang tersedia, lalu aplikasi akan memberikan rekomendasi resep lengkap dengan estimasi biaya, waktu memasak, tingkat kesulitan, daftar bahan, dan langkah-langkah pembuatan menggunakan bantuan AI (Gemini).
 
+## 📹 Link video demo
+
+https://youtu.be/POT6TuyMJ84
+
 ## ✨ Fitur & Tampilan Aplikasi
 
 ### 🏠 Home
@@ -125,9 +129,6 @@ Laporan coverage dapat dilihat di `composeApp/build/reports/kover/html/index.htm
 
 Output APK berada di `composeApp/build/outputs/apk/release/composeApp-release.apk`.
 
-## 📹 Link video demo
-
-https://youtu.be/POT6TuyMJ84
 
 ## 📸 Screenshots
 
